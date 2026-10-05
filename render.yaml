@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: offline-interrogator
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: OLLAMA_MODEL
+        value: gemma3:4b
+      - key: OLLAMA_BASE_URL
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_VOICE_ID
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
