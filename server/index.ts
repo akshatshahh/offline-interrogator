@@ -8,7 +8,7 @@ import {initStore,getSession,saveSession,saveTurn,history,topicStats} from './st
 import {runTool} from './tools.js';
 import {trackSchema,type Question,type Score,type Report,type Session} from './schemas.js';
 import {modelName} from './llm.js';
-Sentry.init({dsn:process.env.SENTRY_DSN||undefined,tracesSampleRate:1,sendDefaultPii:false});
+Sentry.init({dsn:process.env.SENTRY_DSN||undefined,tracesSampleRate:1});
 export const app=express();app.use(express.json({limit:'128kb'}));
 const active=new Set<string>();
 async function locked<T>(id:string,fn:()=>Promise<T>){if(active.has(id))throw Object.assign(new Error('Session is busy. Please wait.'),{status:409});active.add(id);try{return await fn();}finally{active.delete(id);}}

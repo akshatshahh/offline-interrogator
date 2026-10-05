@@ -18,4 +18,4 @@ export const tools={generate_question:generateQuestion,score_answer:scoreAnswer,
 export const interviewer=new Agent({id:'interviewer',name:'Offline Interrogator',instructions:interviewerPrompt,model,tools});
 export const mastra=new Mastra({agents:{interviewer}});
 // Deterministic orchestration invokes the registered Mastra tools; Gemma performs all reasoning.
-export async function runTool(name:keyof typeof tools,input:unknown){const tool=tools[name];const parsed=tool.inputSchema!.parse(input);return tool.execute!(parsed as never,{} as never);}
+export async function runTool(name:keyof typeof tools,input:unknown){const tool=tools[name];const result=await tool.inputSchema!['~standard'].validate(input);if(result.issues)throw new Error('Invalid tool input: '+JSON.stringify(result.issues));return tool.execute!(result.value as never,{} as never);}
