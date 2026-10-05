@@ -1,0 +1,10 @@
+import {z} from 'zod';
+export const trackSchema=z.enum(['DSA','Behavioral','System Design']);
+export const questionSchema=z.object({question:z.string().min(1),topic:z.string().min(1),difficulty:z.number().int().min(1).max(5),hints:z.array(z.string()).length(3)});
+const rating=z.number().min(1).max(10);
+export const scoreSchema=z.object({correctness:rating,approach:rating,complexity_analysis:rating,edge_cases:rating,communication:rating,overall:rating,feedback_markdown:z.string().min(1)}).strict();
+export type Question=z.infer<typeof questionSchema>;
+export type Score=z.infer<typeof scoreSchema>;
+export type Turn={question:Question,answer:string,score:Score,answered_at:string};
+export type Session={id:string,user_id:string,track:z.infer<typeof trackSchema>,difficulty:number,duration_min:number,started_at:string,ended_at?:string,current_question:Question|null,hint_level:number,turns:Turn[],report_card?:Report};
+export type Report={session_id:string,overall:number,topics:{topic:string,avg_score:number,attempts:number}[],weak_spots:{topic:string,avg_score:number,attempts:number}[],transcript:Turn[],started_at:string,ended_at:string};
