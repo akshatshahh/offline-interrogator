@@ -26,4 +26,4 @@
 
 ## Limits of verification
 
-Atlas, live ElevenLabs audio, Sentry ingestion, and Render deployment were not tested because no optional credentials were supplied. Their missing-key behavior was tested. Native browser automation stalled; React report rendering was verified with a DOM test rather than a screenshot. Five low-severity dependency advisories remain in the legacy AI SDK/provider dependency chain; the higher-severity jsondiffpatch advisories were patched.
+Atlas was connected successfully and its sessions, turns, and 24 seed questions were inspected. ElevenLabs returned audio/mpeg from both a direct voice test and the app voice route. Sentry accepted a labeled test event with HTTP 200; a test trace was also submitted. Actual interview traces should be captured in the Sentry UI for the submission. Render deployment remains untested. Missing-key behavior was tested. Native browser automation stalled; React report rendering was verified with a DOM test rather than a screenshot. Five low-severity dependency advisories remain in the legacy AI SDK/provider dependency chain; the higher-severity jsondiffpatch advisories were patched.

@@ -49,6 +49,24 @@ docker compose down
 
 This preserves the model volume. No optional keys are needed. Docker Desktop must be running.
 
+## Hacktoberfest partner categories
+
+This project is made for Avinash. We are entering the following five categories based on implemented integrations:
+
+- **Best Use of Gemma:** Gemma 3 4B is the sole reasoning model. Local Ollama serves the open weights; `server/llm.ts` uses `ollama-ai-provider` for question generation, progressive hints, and strict rubric scoring. Live interviews returned valid scores and adaptive next questions.
+- **Best Use of Mastra:** `server/tools.ts` defines five `createTool` tools, registers them with the interviewer agent, and invokes Mastra's `getToolsForExecution` layer. Express controls the deterministic sequence of question, score, adaptation, and next question; Mastra executes the registered tools. No extra cloud model chooses tools.
+- **Best Use of MongoDB Atlas:** `server/store.ts` stores sessions and embedded transcripts in `sessions`, submitted answers and scores in `turns`, and 24 starter questions in `question_bank`. Dashboard history and weak spots read this data. Live Atlas connectivity and stored documents were verified; connection failures fall back to memory.
+- **Best Use of ElevenLabs:** `/api/voice` sends already-generated question text to ElevenLabs TTS with `eleven_flash_v2_5`. The frontend plays the returned MP3 and provides controls when browser autoplay is blocked. Both a direct test and the actual app route returned playable MP3 data. Browser microphone transcription is Web Speech API, not ElevenLabs.
+- **Best Use of Sentry Agent Tracing:** `server/tools.ts` wraps tool execution in spans; `server/llm.ts` records inference spans with model, latency, prompt tokens, and completion tokens mapped from Ollama evaluation counts. A labeled test event was accepted by Sentry with HTTP 200 and a test trace was submitted. Include actual interview trace screenshots in the submission to demonstrate agent tracing.
+
+Category eligibility and prizes are determined by the judges. Render and DigitalOcean are not claimed: configuration files alone are not deployed use.
+
+### Submission checklist
+
+Publish a DEV post using the [official challenge template](https://dev.to/challenges/hacktoberfest-weekend-2026-10-01), with a code repository link and a deployed demo link **or video demo**. Explain Avinash's interview-preparation problem, how the app helps, how it was built, and why open-weight/local reasoning matters. List the five categories above and show their actual use. The required tags are `devchallenge`, `weekendchallenge`, and `hf26challenge`.
+
+For the video, show setup with voice enabled, ElevenLabs reading a question, an answer being scored by Gemma, the paused timer during processing, the report and JSON download, Atlas documents, and Sentry interview trace attributes. A live public deployment is optional. Keep credentials and personal interview transcripts out of the public repository. Commits after the challenge deadline must be identified in this README, as required by the challenge rules.
+
 ## Supporting partner technology
 
 | Technology | Role | Missing configuration |
