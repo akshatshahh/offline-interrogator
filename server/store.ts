@@ -23,17 +23,15 @@ export async function initStore() {
     await db
       .collection("question_bank")
       .createIndex({ track: 1, topic: 1 }, { unique: true });
-    await db
-      .collection("question_bank")
-      .bulkWrite(
-        seed.map((q) => ({
-          updateOne: {
-            filter: { track: q.track, topic: q.topic },
-            update: { $setOnInsert: q },
-            upsert: true,
-          },
-        })),
-      );
+    await db.collection("question_bank").bulkWrite(
+      seed.map((q) => ({
+        updateOne: {
+          filter: { track: q.track, topic: q.topic },
+          update: { $setOnInsert: q },
+          upsert: true,
+        },
+      })),
+    );
   } catch (e) {
     db = undefined;
     console.warn("Atlas unavailable: using in-memory fallback.", String(e));

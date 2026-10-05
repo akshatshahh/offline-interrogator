@@ -464,3 +464,23 @@ a {
     padding: 22px;
   }
 }
+
+.progress-log {
+  display: flex;
+  gap: 18px;
+  padding: 16px 0;
+  flex-wrap: wrap;
+}
+.progress-log > div {
+  min-width: 110px;
+  flex: 1;
+}
+.progress-log span {
+  font-size: 13px;
+  color: #c9f36b;
+}
+.progress-log small {
+  display: block;
+  color: #829374;
+  font-size: 10px;
+}

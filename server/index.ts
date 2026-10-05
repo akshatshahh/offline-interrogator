@@ -321,13 +321,11 @@ app.use(
     const e = err as Error & { status?: number };
     Sentry.captureException(err);
     console.error(e.message);
-    res
-      .status(e.status || 503)
-      .json({
-        error: e.status
-          ? e.message
-          : "Local model or storage unavailable. Check Ollama is running and gemma3:4b is pulled. Your saved answers are retained.",
-      });
+    res.status(e.status || 503).json({
+      error: e.status
+        ? e.message
+        : "Local model or storage unavailable. Check Ollama is running and gemma3:4b is pulled. Your saved answers are retained.",
+    });
   },
 );
 await initStore();

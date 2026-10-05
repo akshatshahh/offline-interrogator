@@ -3,7 +3,10 @@ import { generateText } from "ai-v4";
 import * as Sentry from "@sentry/node";
 import { z } from "zod";
 export const modelName = process.env.OLLAMA_MODEL || "gemma3:4b";
-if (modelName.includes("cloud")) throw new Error("Cloud Ollama models are prohibited; use local Gemma weights.");
+if (modelName.includes("cloud"))
+  throw new Error(
+    "Cloud Ollama models are prohibited; use local Gemma weights.",
+  );
 const base = (process.env.OLLAMA_BASE_URL || "http://localhost:11434").replace(
   /\/$/,
   "",
@@ -20,6 +23,7 @@ export async function jsonCall<T>(
   prompt: string,
   schema: z.ZodType<T>,
 ): Promise<T> {
+  const toolSpan = Sentry.getActiveSpan();
   return Sentry.startSpan(
     { name: `tool.${name}`, op: "ai.tool", attributes: { model: modelName } },
     async (span) => {
@@ -63,6 +67,7 @@ export async function jsonCall<T>(
           completion_tokens: completionTokens,
         };
         span?.setAttributes(attributes);
+        toolSpan?.setAttributes(attributes);
         console.log(JSON.stringify({ tool: name, ...attributes }));
       }
     },

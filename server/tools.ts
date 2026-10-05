@@ -30,9 +30,9 @@ export const generateQuestion = createTool({
     jsonCall(
       "generate_question",
       interviewerPrompt,
-      `Generate a fresh question for ${input.track}, difficulty ${input.difficulty}. Avoid topics ${JSON.stringify(input.avoid_topics)}. Prioritize weak spots ${JSON.stringify(input.weak_spots)} when not already asked. Inspiration only: ${JSON.stringify(await bank(input.track))}. Return JSON {question:string,topic:string,difficulty:integer 1-5,hints:[string,string,string]}.`,
+      `Generate a fresh question for ${input.track}, difficulty ${input.difficulty}. Avoid topics ${JSON.stringify(input.avoid_topics)}. Prioritize weak spots ${JSON.stringify(input.weak_spots)} when not already asked. Inspiration only: ${JSON.stringify(await bank(input.track))}. Return JSON {question:string,topic:string,difficulty:exactly ${input.difficulty},hints:[string,string,string]}.`,
       questionSchema,
-    ),
+    ).then((question) => ({ ...question, difficulty: input.difficulty })),
 });
 export const scoreAnswer = createTool({
   id: "score_answer",
