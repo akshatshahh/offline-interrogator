@@ -2,3 +2,5 @@ node_modules/
 dist/
 .env
 exports/*.json
+
+exports/*.mp3

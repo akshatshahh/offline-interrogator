@@ -55,7 +55,8 @@ async function session(id: string) {
   return s;
 }
 const expired = (s: Session) =>
-  Date.now() >= Date.parse(s.started_at) + s.duration_min * 60000;
+  Date.now() >=
+  Date.parse(s.started_at) + s.duration_min * 60000 + (s.paused_ms || 0);
 app.get(
   "/api/health",
   route(async (_req, res) => {
@@ -132,10 +133,18 @@ app.post(
         });
         return;
       }
-      const score = (await runTool("score_answer", {
-        question: s.current_question.question,
-        answer: answer_text,
-      })) as Score;
+      const processingStart = Date.now();
+      let score: Score;
+      try {
+        score = (await runTool("score_answer", {
+          question: s.current_question.question,
+          answer: answer_text,
+        })) as Score;
+      } catch (error) {
+        s.paused_ms = (s.paused_ms || 0) + Date.now() - processingStart;
+        await saveSession(s);
+        throw error;
+      }
       s.turns.push({
         question: s.current_question,
         answer: answer_text,
@@ -153,15 +162,6 @@ app.post(
       await saveTurn(s.id, s.turns.at(-1)!, s.turns.length - 1);
       s.current_question = null;
       await saveSession(s);
-      if (expired(s)) {
-        res.json({
-          score,
-          feedback: score.feedback_markdown,
-          next_question: null,
-          report_card: await runTool("end_session", { session_id }),
-        });
-        return;
-      }
       let next: Question | null = null;
       let next_error: string | undefined;
       try {
@@ -175,6 +175,7 @@ app.post(
         next_error =
           "Answer saved. Next question could not be generated; end the session for your report.";
       }
+      s.paused_ms = (s.paused_ms || 0) + Date.now() - processingStart;
       s.current_question = next;
       await saveSession(s);
       res.json({
@@ -200,10 +201,17 @@ app.post(
         res.json({ hint: "All three hints have been used." });
         return;
       }
-      const result = await runTool("get_hint", {
-        question: s.current_question.question,
-        hint_level: s.hint_level + 1,
-      });
+      const processingStart = Date.now();
+      let result;
+      try {
+        result = await runTool("get_hint", {
+          question: s.current_question.question,
+          hint_level: s.hint_level + 1,
+        });
+      } finally {
+        s.paused_ms = (s.paused_ms || 0) + Date.now() - processingStart;
+        await saveSession(s);
+      }
       s.hint_level++;
       await saveSession(s);
       res.json(result);
@@ -287,16 +295,25 @@ app.post(
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ text, model_id: "eleven_flash_v2_5" }),
-          signal: AbortSignal.timeout(10000),
+          signal: AbortSignal.timeout(30000),
         },
       );
       if (!r.ok) {
-        res.status(204).end();
+        res
+          .status(502)
+          .json({
+            error:
+              "ElevenLabs could not generate audio. Check voice access and remaining credits.",
+          });
         return;
       }
       res.type("audio/mpeg").send(Buffer.from(await r.arrayBuffer()));
     } catch {
-      res.status(204).end();
+      res
+        .status(502)
+        .json({
+          error: "Voice request timed out or failed. Try Read aloud again.",
+        });
     }
   }),
 );

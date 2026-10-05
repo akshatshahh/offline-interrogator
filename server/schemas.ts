@@ -34,6 +34,7 @@ export type Session = {
   duration_min: number;
   started_at: string;
   ended_at?: string;
+  paused_ms?: number;
   current_question: Question | null;
   hint_level: number;
   turns: Turn[];

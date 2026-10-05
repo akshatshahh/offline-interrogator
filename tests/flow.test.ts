@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { test, after, before } from "node:test";
 import assert from "node:assert/strict";
 import express from "express";
@@ -5,6 +6,7 @@ import type { Server } from "node:http";
 import { readFile, rm } from "node:fs/promises";
 let fake: Server, server: Server, base: string;
 let bad = false;
+let scoreDelay = 0;
 let called = 0;
 const ids: string[] = [];
 before(async () => {
@@ -13,10 +15,12 @@ before(async () => {
   ollama.get("/api/tags", (_req, res) =>
     res.json({ models: [{ name: "gemma3:4b" }] }),
   );
-  ollama.post("/api/chat", (req, res) => {
+  ollama.post("/api/chat", async (req, res) => {
     assert.equal(req.body.model, "gemma3:4b");
     called++;
     const prompt = req.body.messages.at(-1).content;
+    if (prompt.includes("numeric scores") && scoreDelay)
+      await new Promise((r) => setTimeout(r, scoreDelay));
     const result = prompt.includes("numeric scores")
       ? {
           correctness: 4,
@@ -171,4 +175,37 @@ test("expired sessions end without scoring late answers; ended sessions reject n
     (await post("/api/interview/hint", { session_id: s.id })).status,
     409,
   );
+});
+
+test("model processing does not consume the remaining interview budget", async () => {
+  const start = await (
+    await post("/api/interview/start", {
+      track: "DSA",
+      difficulty: 2,
+      duration_min: 5,
+    })
+  ).json();
+  ids.push(start.session_id);
+  const { getSession, saveSession } = await import("../server/store.js");
+  const s = (await getSession(start.session_id))!;
+  s.started_at = new Date(Date.now() - 299500).toISOString();
+  await saveSession(s);
+  scoreDelay = 1200;
+  try {
+    const r = await post("/api/interview/answer", {
+      session_id: s.id,
+      answer_text: "Use a map.",
+    });
+    assert.equal(r.status, 200);
+    const result = await r.json();
+    assert.ok(result.next_question);
+    assert.equal(result.report_card, undefined);
+    const saved = (await getSession(s.id))!;
+    assert.ok(saved.paused_ms! >= 1200);
+    assert.ok(
+      Date.now() < Date.parse(saved.started_at) + 300000 + saved.paused_ms!,
+    );
+  } finally {
+    scoreDelay = 0;
+  }
 });

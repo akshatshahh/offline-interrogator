@@ -40,6 +40,8 @@ export function App() {
     [count, setCount] = useState(0),
     [health, setHealth] = useState<any>(null),
     [listening, setListening] = useState(false);
+  const [pausedAt, setPausedAt] = useState<number | null>(null);
+  const [voiceStatus, setVoiceStatus] = useState("");
   const audio = useRef<HTMLAudioElement | null>(null),
     recognition = useRef<any>(null),
     ending = useRef(false);
@@ -61,6 +63,7 @@ export function App() {
   useEffect(() => {
     audio.current?.pause();
     if (!voice || !question || screen !== "room") return;
+    setVoiceStatus("Loading ElevenLabs audio…");
     const controller = new AbortController();
     let url: string | undefined;
     fetch("/api/voice", {
@@ -70,12 +73,29 @@ export function App() {
       signal: controller.signal,
     })
       .then(async (r) => {
-        if (r.status === 204 || !r.ok) return;
+        if (r.status === 204) {
+          setVoiceStatus("Voice is not configured.");
+          return;
+        }
+        if (!r.ok) {
+          const data = await r.json();
+          throw new Error(data.error || "Voice unavailable");
+        }
         url = URL.createObjectURL(await r.blob());
-        audio.current = new Audio(url);
-        audio.current.play().catch(() => {});
+        if (!audio.current) return;
+        audio.current.src = url;
+        setVoiceStatus("ElevenLabs question audio ready");
+        audio.current
+          .play()
+          .catch(() =>
+            setVoiceStatus(
+              "Press Play below to hear the question—your browser blocked autoplay.",
+            ),
+          );
       })
-      .catch(() => {});
+      .catch((e) => {
+        if (e.name !== "AbortError") setVoiceStatus(e.message);
+      });
     return () => {
       controller.abort();
       audio.current?.pause();
@@ -83,6 +103,10 @@ export function App() {
     };
   }, [question, voice, screen]);
   async function action(fn: () => Promise<void>) {
+    const pauseStart = Date.now();
+    const inRoom = screen === "room";
+    const oldQstart = qstart;
+    if (inRoom) setPausedAt(pauseStart);
     setBusy(true);
     setError("");
     try {
@@ -90,6 +114,13 @@ export function App() {
     } catch (e) {
       setError((e as Error).message);
     } finally {
+      if (inRoom) {
+        const elapsed = Date.now() - pauseStart;
+        setStart((s) => s + elapsed);
+        setQstart((q) => (q === oldQstart ? q + elapsed : q));
+        setNow(Date.now());
+        setPausedAt(null);
+      }
       setBusy(false);
     }
   }
@@ -109,7 +140,7 @@ export function App() {
   }, [screen]);
   const remaining = Math.max(
     0,
-    duration * 60 - Math.floor((now - start) / 1000),
+    duration * 60 - Math.floor(((pausedAt ?? now) - start) / 1000),
   );
   useEffect(() => {
     if (screen === "room" && remaining === 0 && !busy && !ending.current)
@@ -364,6 +395,11 @@ export function App() {
               End session
             </button>
           </div>
+          {busy && (
+            <p className="notice">
+              Timer paused while the interviewer is thinking.
+            </p>
+          )}
           <progress max={duration * 60} value={duration * 60 - remaining} />
           <section className="panel question">
             <div className="section-title">
@@ -372,11 +408,10 @@ export function App() {
                 {question?.difficulty}
               </span>
               <span>
-                {Math.floor((now - qstart) / 60000)}:
-                {String(Math.floor((now - qstart) / 1000) % 60).padStart(
-                  2,
-                  "0",
-                )}{" "}
+                {Math.floor(((pausedAt ?? now) - qstart) / 60000)}:
+                {String(
+                  Math.floor(((pausedAt ?? now) - qstart) / 1000) % 60,
+                ).padStart(2, "0")}{" "}
                 on question
               </span>
             </div>
@@ -398,6 +433,17 @@ export function App() {
               Give me a hint
             </button>
           </section>
+          {voice && (
+            <section className="panel">
+              <p role="status">{voiceStatus}</p>
+              <audio
+                ref={audio}
+                controls
+                aria-label="ElevenLabs question audio"
+                style={{ width: "100%" }}
+              />
+            </section>
+          )}
           {score && (
             <section className="score panel">
               <strong>
