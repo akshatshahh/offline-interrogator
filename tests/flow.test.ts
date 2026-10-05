@@ -124,7 +124,7 @@ test("two sessions: Mastra tools, strict scores, hints, adaptive question, repor
       report_card,
     );
   }
-  const dash = await (await fetch(base + "/api/dashboard/dhruv")).json();
+  const dash = await (await fetch(base + "/api/dashboard/avinash")).json();
   assert.equal(dash.sessions.length, 2);
   assert.deepEqual(dash.weak_spots, [
     { topic: "Arrays", avg_score: 4.2, attempts: 2 },

@@ -47,7 +47,7 @@ export function App() {
     ending = useRef(false);
   async function refresh() {
     try {
-      setDashboard(await api("dashboard/dhruv"));
+      setDashboard(await api("dashboard/avinash"));
       setHealth(await api("health"));
     } catch {}
   }

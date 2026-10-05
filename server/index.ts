@@ -93,7 +93,7 @@ app.post(
         duration_min: z.number().int().min(1).max(60),
       })
       .parse(req.body);
-    const weak = await runTool("get_weak_spots", { user_id: "dhruv" });
+    const weak = await runTool("get_weak_spots", { user_id: "avinash" });
     const first = (await runTool("generate_question", {
       ...data,
       avoid_topics: [],
@@ -102,7 +102,7 @@ app.post(
     const s: Session = {
       ...data,
       id: randomUUID(),
-      user_id: "dhruv",
+      user_id: "avinash",
       started_at: new Date().toISOString(),
       current_question: first,
       hint_level: 0,

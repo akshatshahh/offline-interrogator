@@ -103,12 +103,12 @@ This deployment hosts the UI/API; the Gemma inference server remains self-hosted
 - `POST /api/interview/answer` — `{session_id, answer_text}` → `{score, feedback, next_question}`; includes a report when time runs out.
 - `POST /api/interview/hint` — `{session_id}` → `{hint}`; up to three progressively revealing hints.
 - `POST /api/interview/end` — `{session_id}` → `{report_card}`; idempotent.
-- `GET /api/dashboard/dhruv` — sessions, weak spots, chronological score progress.
+- `GET /api/dashboard/avinash` — sessions, weak spots, chronological score progress.
 - `GET /api/interview/:session_id/report` — saved report.
 - `GET /api/interview/:session_id/export` — download a finished session JSON.
 - `GET /api/health` — local model and voice availability.
 
-Default user is `dhruv`; there is no auth. Duration is 1–60 minutes; UI presets start at five. The UI automatically ends at the deadline. Concurrent answer/hint/end mutations are rejected with 409 to prevent duplicate turns. If generation fails after scoring, the scored answer remains saved and can be included in the report by ending the session.
+Default user is `avinash`; there is no auth. Duration is 1–60 minutes; UI presets start at five. The UI automatically ends at the deadline. Concurrent answer/hint/end mutations are rejected with 409 to prevent duplicate turns. If generation fails after scoring, the scored answer remains saved and can be included in the report by ending the session.
 
 ## Demo and verification
 
