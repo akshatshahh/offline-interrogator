@@ -41,7 +41,7 @@ Development uses two terminals: `npm run dev` and `npm run dev:client` (Vite at 
 docker compose up --build
 ```
 
-Compose starts Ollama, pulls `gemma3:4b` in a one-shot init service, then starts the app. Open http://localhost:3000. Initial startup waits for the model download. The Ollama volume caches weights; finished session exports are mounted into `./exports`. Stop any native server using port 3000 before starting Compose. CPU-only Docker inference on macOS is slower than native Ollama with Metal.
+Compose starts Ollama, pulls `gemma3:4b` in a one-shot init service, then starts the app. Open http://localhost:3000. Initial startup waits for the model download. The Ollama volume caches weights; finished session exports are mounted into `./exports`. Stop any native server using port 3000 before starting Compose, or run `APP_PORT=3001 docker compose up --build` for a second port. The published port binds to localhost. CPU-only Docker inference on macOS is slower than native Ollama with Metal.
 
 ```sh
 docker compose down
@@ -107,6 +107,6 @@ npm test
 rg 'openai|anthropic|google-generative|gemini' server client/src
 ```
 
-Integration tests use a local Ollama protocol fixture, **not an actual LLM**. They exercise two complete sessions, strict score schema, hints, persisted exports, weak-spot updates, absent optional keys, malformed-output retries, and request validation. Live-model and Docker verification evidence is recorded in `VERIFICATION.md`.
+Integration tests use a local Ollama protocol fixture, **not an actual LLM**. They exercise two complete sessions, strict score schema, hints, persisted exports, weak-spot updates, absent optional keys, malformed-output retries, and request validation. A DOM rendering test also checks the report card, transcript, topic scores, weak spots, and JSON download link. Live-model and Docker verification evidence is recorded in `VERIFICATION.md`.
 
 Known limitations: no auth; interrupted sessions cannot be resumed in the UI; feedback Markdown is shown as readable plain text; Atlas outages retain current-process sessions but do not automatically replay failed writes; the requested legacy `ollama-ai-provider`/AI SDK v4 chain retains low-severity dependency advisories. A patched `jsondiffpatch` override removes its higher-severity advisories.

@@ -143,3 +143,32 @@ test("malformed model output retries then returns an actionable error", async ()
   assert.equal(r.status, 503);
   bad = false;
 });
+
+test("expired sessions end without scoring late answers; ended sessions reject new hints", async () => {
+  const start = await (
+    await post("/api/interview/start", {
+      track: "DSA",
+      difficulty: 2,
+      duration_min: 5,
+    })
+  ).json();
+  ids.push(start.session_id);
+  const { getSession, saveSession } = await import("../server/store.js");
+  const s = (await getSession(start.session_id))!;
+  s.started_at = new Date(Date.now() - 6 * 60000).toISOString();
+  await saveSession(s);
+  const beforeCalls = called;
+  const r = await post("/api/interview/answer", {
+    session_id: s.id,
+    answer_text: "Late answer",
+  });
+  assert.equal(r.status, 200);
+  const result = await r.json();
+  assert.equal(result.next_question, null);
+  assert.equal(result.report_card.transcript.length, 0);
+  assert.equal(called, beforeCalls);
+  assert.equal(
+    (await post("/api/interview/hint", { session_id: s.id })).status,
+    409,
+  );
+});

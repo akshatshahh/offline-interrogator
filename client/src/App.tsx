@@ -104,6 +104,9 @@ export function App() {
     });
     ending.current = false;
   }
+  useEffect(() => {
+    if (screen !== "room") recognition.current?.stop();
+  }, [screen]);
   const remaining = Math.max(
     0,
     duration * 60 - Math.floor((now - start) / 1000),
