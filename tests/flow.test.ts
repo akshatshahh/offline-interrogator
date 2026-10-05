@@ -2,6 +2,7 @@ import "dotenv/config";
 import { test, after, before } from "node:test";
 import assert from "node:assert/strict";
 import express from "express";
+import * as Sentry from "@sentry/node";
 import type { Server } from "node:http";
 import { readFile, rm } from "node:fs/promises";
 let fake: Server, server: Server, base: string;
@@ -208,4 +209,8 @@ test("model processing does not consume the remaining interview budget", async (
   } finally {
     scoreDelay = 0;
   }
+});
+
+test("Sentry telemetry is disabled for local tests", () => {
+  assert.equal(Sentry.getClient()?.getOptions().enabled, false);
 });

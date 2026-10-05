@@ -21,7 +21,12 @@ import {
   type Session,
 } from "./schemas.js";
 import { modelName } from "./llm.js";
-Sentry.init({ dsn: process.env.SENTRY_DSN || undefined, tracesSampleRate: 1 });
+Sentry.init({
+  enabled: process.env.NODE_ENV !== "test",
+  environment: process.env.NODE_ENV || "development",
+  dsn: process.env.SENTRY_DSN || undefined,
+  tracesSampleRate: 1,
+});
 export const app = express();
 app.use(express.json({ limit: "128kb" }));
 const active = new Set<string>();
@@ -299,21 +304,17 @@ app.post(
         },
       );
       if (!r.ok) {
-        res
-          .status(502)
-          .json({
-            error:
-              "ElevenLabs could not generate audio. Check voice access and remaining credits.",
-          });
+        res.status(502).json({
+          error:
+            "ElevenLabs could not generate audio. Check voice access and remaining credits.",
+        });
         return;
       }
       res.type("audio/mpeg").send(Buffer.from(await r.arrayBuffer()));
     } catch {
-      res
-        .status(502)
-        .json({
-          error: "Voice request timed out or failed. Try Read aloud again.",
-        });
+      res.status(502).json({
+        error: "Voice request timed out or failed. Try Read aloud again.",
+      });
     }
   }),
 );
@@ -336,8 +337,11 @@ app.use(
       return;
     }
     const e = err as Error & { status?: number };
-    Sentry.captureException(err);
-    console.error(e.message);
+    // Expected client errors (expired sessions, conflicts, missing IDs) are not incidents.
+    if (!e.status || e.status >= 500) {
+      Sentry.captureException(err);
+      console.error(e.message);
+    }
     res.status(e.status || 503).json({
       error: e.status
         ? e.message
