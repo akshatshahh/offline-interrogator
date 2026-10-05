@@ -180,7 +180,7 @@ export function App() {
       {screen === "setup" && (
         <>
           <div className="hero">
-            <p className="eyebrow">BUILT FOR DHRUV / HACKTOBERFEST 2026</p>
+            <p className="eyebrow">MADE FOR AVINASH / HACKTOBERFEST 2026</p>
             <h1>
               Your next interview.
               <br />

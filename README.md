@@ -1,6 +1,6 @@
 # The Offline Interrogator
 
-A local-first AI mock interviewer built for Dhruv, a friend preparing for FAANG interviews. Hacktoberfest 2026 Weekend Challenge: **Build for a Friend**.
+A local-first AI mock interviewer built for Avinash, a friend preparing for FAANG interviews. Hacktoberfest 2026 Weekend Challenge: **Build for a Friend**.
 
 Pick DSA, Behavioral, or System Design. Get one question at a time, explain your answer, ask for a hint, and receive a strict report card. Difficulty rises after strong answers and falls when fundamentals need work. Topic history makes weak spots visible across sessions.
 
